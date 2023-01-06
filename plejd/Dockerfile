@@ -54,12 +54,7 @@ ENTRYPOINT ["/init"]
 # Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Copy data for add-on
-COPY ./*.js /plejd/
-COPY ./config.json /plejd/
-COPY ./package.json /plejd/
-
-ARG BUILD_ARCH
+#ARG BUILD_ARCH
 
 # Install Node
 RUN apk add --no-cache jq
@@ -85,6 +80,9 @@ RUN \
   && npm config set unsafe-perm true
 
 WORKDIR /plejd
+
+# Install node depdendencies
+COPY ./package.json /plejd/
 RUN npm install \
   --no-audit \
   --no-update-notifier \
@@ -92,6 +90,10 @@ RUN npm install \
 
 # Copy root filesystem
 COPY rootfs /
+
+# Copy data for add-on
+COPY ./*.js /plejd/
+COPY ./config.json /plejd/
 
 # Set up empty /data/options.json
 RUN mkdir -p /data && echo "{}" > /data/options.json

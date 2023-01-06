@@ -1,7 +1,55 @@
-ARG BUILD_FROM=hassioaddons/base:8.0.6
-FROM $BUILD_FROM
+ARG BUILD_FROM=alpine:3.12.1
+## hadolint ignore=DL3006
+FROM ${BUILD_FROM}
 
-ENV LANG C.UTF-8
+# Environment variables
+ENV \
+    HOME="/root" \
+    LANG="C.UTF-8" \
+    PS1="$(whoami)@$(hostname):$(pwd)$ " \
+    S6_BEHAVIOUR_IF_STAGE2_FAILS=2 \
+    S6_CMD_WAIT_FOR_SERVICES=1 \
+    TERM="xterm-256color"
+
+# Copy root filesystem
+COPY addon-base-rootfs /
+
+# Set shell
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+
+# Install base system
+ARG BUILD_ARCH=armv7
+RUN \
+    set -o pipefail \
+    \
+    && echo '@edge http://dl-cdn.alpinelinux.org/alpine/edge/main' >> /etc/apk/repositories \
+    && echo '@edge http://dl-cdn.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories \
+    && echo '@edge http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories \
+    \
+    && apk add --no-cache \
+        libcrypto1.1=1.1.1g-r0 \
+        libssl1.1=1.1.1g-r0 \
+        musl-utils=1.1.24-r10 \
+        musl=1.1.24-r10 \
+    \
+    && apk add --no-cache \
+        bash=5.0.17-r0 \
+        curl=7.79.1-r1 \
+        jq=1.6-r1 \
+        tzdata=2022a-r0 \
+    \
+    && S6_ARCH="${BUILD_ARCH}" \
+    && if [ "${BUILD_ARCH}" = "i386" ]; then S6_ARCH="x86"; fi \
+    && if [ "${BUILD_ARCH}" = "armv7" ]; then S6_ARCH="arm"; fi \
+    \
+    && curl -L -s "https://github.com/just-containers/s6-overlay/releases/download/v2.1.0.2/s6-overlay-${S6_ARCH}.tar.gz" \
+        | tar zxvf - -C / \
+    \
+    && mkdir -p /etc/fix-attrs.d \
+    && mkdir -p /etc/services.d
+
+# Entrypoint & CMD
+ENTRYPOINT ["/init"]
 
 # Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -44,6 +92,9 @@ RUN npm install \
 
 # Copy root filesystem
 COPY rootfs /
+
+# Set up empty /data/options.json
+RUN mkdir -p /data && echo "{}" > /data/options.json
 
 # Build arguments
 ARG BUILD_DATE

@@ -1,17 +1,17 @@
-#!/usr/bin/with-contenv bashio
+#!/bin/bash
 # ==============================================================================
 # Community Hass.io Add-ons: Plejd
 # Runs the Plejd service
 # ==============================================================================
 
-bashio::log.info 'Starting the Plejd service...'
+echo 'Starting the Plejd service...'
 
 # Change working directory
-cd /plejd || bashio::exit.nok 'Unable to change working directory'
+cd /plejd || (>&2 echo 'Unable to change working directory'; exit $ERRCODE)
 
 # Run the Plejd service
-bashio::log.info 'Verified permissions on startup script'
+echo 'Verifying permissions on startup script'
 chmod +x /usr/bin/plejd.sh
 
-bashio::log.info 'Executing startup script'
+echo 'Executing startup script'
 exec /usr/bin/plejd.sh

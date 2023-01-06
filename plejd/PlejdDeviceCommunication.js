@@ -71,7 +71,7 @@ class PlejdDeviceCommunication extends EventEmitter {
 
       await this.plejdBleHandler.init();
     } catch (err) {
-      logger.error('Failed init() of BLE. Starting reconnect loop.');
+      logger.error('Failed init() of BLE. Starting reconnect loop.', err);
       await this.plejdBleHandler.startReconnectPeriodicallyLoop();
     }
   }

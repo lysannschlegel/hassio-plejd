@@ -1,5 +1,5 @@
-#!/usr/bin/with-contenv bashio
+#!/bin/bash
 
-bashio::log.info 'Running add-on'
+echo 'Running add-on'
 exec node /plejd/main.js
 
